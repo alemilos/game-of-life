@@ -9,3 +9,5 @@ Compile the program
 Execute the program
 `./main`
 
+Keep pressing the Enter key to see the generations evoloving.
+
