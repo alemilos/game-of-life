@@ -10,6 +10,7 @@
   - any dead cell with exactly 3 live neigbours becomes a live cell, as if by reproduction. 
 */
 #include <stdio.h>
+#include <unistd.h>
 
 #define COLS 70
 #define ROWS 30
@@ -17,6 +18,7 @@ char *ALIVE= "■";
 // #define ALIVE '*'
 #define DEAD ' '
 #define DEBUG 0 
+#define AUTO 1 
 
 void init(int *grid);
 void setup(int *grid);
@@ -32,22 +34,39 @@ void printgrid(int *grid);
 
 int main(void) {
   int grid[COLS * ROWS];
+  // Initial Grid initialize and draw
   init(grid);
   setup(grid);
-  draw(grid); // initial grid
-  char ch;
-  while ((ch = getchar()) == 10) {
-    update(grid);
-    draw(grid);
+  draw(grid);  
+
+  if (AUTO){
+    // Automatically update
+    while(1){
+      usleep(30000);
+      update(grid);
+      draw(grid);
+    }
+  }
+  else{
+    // Update when pressing Enter key
+    char ch;
+    while ((ch = getchar()) == 10) {
+      update(grid);
+      draw(grid);
+    }
   }
   return 0;
 }
 
 /**
   Map an (x,y) position to a grid index to be used in  
-  grid[index]
+  grid[index].
+  Any x or y can be provided, they will be converted in the 
+  grid coorinates using modular arithmetic  
 */
 int cellindex(int x, int y){
+  x = (x+COLS)%COLS; 
+  y = (y+ROWS)%ROWS;
   return y * COLS + x;
 }
 
@@ -95,19 +114,16 @@ void copygrid(int *source, int *dest) {
                       nw  n  ne
                        w  C  e 
                       sw  s  se 
-
-  The function checks the neighbors using modular arithmetic, and the modules are  
-  ROWS and COLS when respectively checking vertically and horizontally.
 */
 int count_alive_neighbors(int *grid, int x, int y) { 
-  int nw = getcell(grid, (x-1 + COLS)%COLS, (y-1 + ROWS)%ROWS);
-  int n = getcell(grid, x, (y-1 + ROWS)%ROWS);
-  int ne = getcell(grid, (x+1)%COLS, (y-1 + ROWS)%ROWS);
-  int w= getcell(grid, (x-1 + COLS)%COLS, y);
-  int e = getcell(grid, (x+1)%COLS, y);
-  int sw = getcell(grid, (x-1 + COLS)%COLS, (y+1)%ROWS);
-  int s = getcell(grid, x, (y+1)%ROWS);
-  int se= getcell(grid, (x+1)%COLS, (y+1)%ROWS);
+  int nw = getcell(grid, x-1 , y-1);
+  int n = getcell(grid, x, y-1);
+  int ne = getcell(grid, x+1, y-1);
+  int w= getcell(grid, x-1, y);
+  int e = getcell(grid, x+1, y);
+  int sw = getcell(grid, x-1, y+1);
+  int s = getcell(grid, x, y+1);
+  int se= getcell(grid, x+1, y+1);
 
   return nw + n + ne + w + e + sw + s + se;
 }
